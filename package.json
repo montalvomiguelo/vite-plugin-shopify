@@ -1,0 +1,7 @@
+{
+  "name": "vite-plugin-shopify",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Miguel Montalvo <miguel.montalvo@barrelny.com>",
+  "license": "MIT"
+}
