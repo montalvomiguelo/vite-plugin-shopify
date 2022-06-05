@@ -3,15 +3,12 @@ import { normalizePath, mergeConfig } from 'vite'
 import type { ConfigEnv, PluginOption, UserConfig } from 'vite'
 import { Entrypoints } from './types'
 import glob from 'fast-glob'
-import { filterEntrypointsForRollup, outputOptions } from './config'
+import { filterEntrypointsForRollup, outputOptions, projectRoot, root, sourceCodeDir } from './config'
 import createDebugger from 'debug'
 
 const debug = createDebugger('vite-plugin-shopify:config')
 
 function config (config: UserConfig, env: ConfigEnv): UserConfig {
-  const projectRoot = process.cwd()
-  const sourceCodeDir = join(projectRoot, 'frontend')
-  const root = join(sourceCodeDir, 'entrypoints')
   const assetsDir = './'
   const outDir = relative(root, join(projectRoot, 'assets'))
   const sourcemap = env.command === 'build'
