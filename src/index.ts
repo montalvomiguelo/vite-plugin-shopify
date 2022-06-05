@@ -1,7 +1,6 @@
 import { join, relative } from 'path'
-import { normalizePath } from 'vite'
+import { normalizePath, mergeConfig } from 'vite'
 import type { ConfigEnv, PluginOption, UserConfig } from 'vite'
-import { mergeConfig } from 'vite'
 import { Entrypoints } from './types'
 import glob from 'fast-glob'
 import { filterEntrypointsForRollup, outputOptions } from './config'
@@ -16,13 +15,13 @@ function config (config: UserConfig, env: ConfigEnv): UserConfig {
   const assetsDir = './'
   const outDir = relative(root, join(projectRoot, 'assets'))
   const sourcemap = env.command === 'build'
-  const base = env.command === 'build' ? (config.base || '/__THEME_BASE__/') : '/'
-  const host = config?.server?.host || 'localhost'
-  const port = config?.server?.port || 3000
+  const base = env.command === 'build' ? (config?.base ?? '/__THEME_BASE__/') : '/'
+  const host = config?.server?.host ?? 'localhost'
+  const port = config?.server?.port ?? 3000
   const https = config?.server?.https ?? false
-  const socketProtocol = https ? 'wss' : 'ws'
-  const protocol = https ? 'https:' : 'http:'
-  const origin = `${protocol}//${host}:${port}`
+  const socketProtocol = https === true ? 'wss' : 'ws'
+  const protocol = https === true ? 'https:' : 'http:'
+  const origin = `${protocol}//${host as string}:${port}`
   const alias = {
     '~': sourceCodeDir,
     '@': sourceCodeDir
