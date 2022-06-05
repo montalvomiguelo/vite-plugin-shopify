@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="{{ shop.locale }}">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="">
+  <link rel="canonical" href="{{ canonical_url }}">
+
+  <title>{{ shop.name }}</title>
+
+  <meta name="description" content="">
+
+  <script src="{{ 'theme.ed535426.js' | asset_url }}" type="module" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="{{ 'theme.65ff936e.css' | asset_url }}">
+
+  {{ content_for_header }}
+</head>
+
+<body>
+  {{ content_for_layout }}
+</body>
+</html>
