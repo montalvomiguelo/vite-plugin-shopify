@@ -11,8 +11,9 @@
 
   <meta name="description" content="">
 
-  <script src="{{ 'theme.ed535426.js' | asset_url }}" type="module" crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="{{ 'theme.65ff936e.css' | asset_url }}">
+  {%- render 'vite-client' -%}
+  {%- render 'vite-tag' with 'theme.scss' -%}
+  {%- render 'vite-tag' with 'theme.ts' -%}
 
   {{ content_for_header }}
 </head>
