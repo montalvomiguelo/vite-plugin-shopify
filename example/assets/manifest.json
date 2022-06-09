@@ -1,7 +1,15 @@
 {
   "theme.ts": {
-    "file": "theme.da721a79.js",
+    "file": "theme.62718997.js",
     "src": "theme.ts",
-    "isEntry": true
+    "isEntry": true,
+    "dynamicImports": [
+      "../../../node_modules/.pnpm/lodash-es@4.17.21/node_modules/lodash-es/lodash.js"
+    ]
+  },
+  "../../../node_modules/.pnpm/lodash-es@4.17.21/node_modules/lodash-es/lodash.js": {
+    "file": "lodash.62178161.js",
+    "src": "../../../node_modules/.pnpm/lodash-es@4.17.21/node_modules/lodash-es/lodash.js",
+    "isDynamicEntry": true
   }
 }
