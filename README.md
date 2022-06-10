@@ -41,7 +41,7 @@ Place your code under `frontend/entrypoints`
 
 ```bash
 frontend
-  ├── entrypoints
+  ├── entrypoints:
   │   # only Vite entry files here
   │   │── theme.ts
   │   └── theme.scss
