@@ -7,7 +7,7 @@ Shopify Vite is a project that aims to integrate Vite as seamlessly as possible 
 * ⚡️ [Everything Vite provides](https://vitejs.dev/guide/features.html), plus:
 * 🤖 Automatic entrypoint detection
 * 🏷 Smart generation of `script` and `link` tags for entrypoints
-* 🌎 Dynamic public base path set to the `assets` folder of a theme
+* 🌎 Full support for assets served from Shopify CDN
 * 👌 Zero-Config
 
 ## Install
@@ -18,22 +18,22 @@ npm i vite-plugin-shopify -D
 # yarn
 yarn add vite-plugin-shopify -D
 
-# pnp
+# pnpm
 pnpm add vite-plugin-shopify -D
 
 ```
 
 ## Usage
 
-Add `Shopify` plugin to vite.config.js / vite.config.ts
+Add `shopify` plugin to vite.config.js / vite.config.ts
 
 ```ts
 // vite.config.js / vite.config.ts
-import { Shopify } from 'vite-plugin-shopify'
+import { shopify } from 'vite-plugin-shopify'
 
 export default {
   plugins: [
-    Shopify()
+    shopify()
   ]
 }
 ```
@@ -92,7 +92,7 @@ Then add this snippet (in your `<head>` element too) to load your scripts:
 
 # development mode
 {%- if vite-tag == 'theme.ts' -%}
-  <script src="http://localhost:3000/theme.js" type="module"></script>
+  <script src="http://localhost:3000/theme.ts" type="module"></script>
 {%- endif -%}
 ```
 
