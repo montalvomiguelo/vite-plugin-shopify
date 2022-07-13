@@ -5,7 +5,6 @@ import type { Plugin, ResolvedConfig } from 'vite'
 import { OutputChunk } from 'rollup'
 import { ENTRYPOINT_TYPES_REGEX, CSS_EXTENSIONS_REGEX, CLIENT_SCRIPT_PATH } from './constants'
 import { Input } from './types'
-import { withoutExtension } from './utils'
 import createDebugger from 'debug'
 
 let config: ResolvedConfig
@@ -124,7 +123,7 @@ export default function VitePluginShopifyHtml (): Plugin {
 
             const entrypoint = Object.keys(entrypoints).find(entrypoint =>
               CSS_EXTENSIONS_REGEX.test(entrypoint) &&
-              withoutExtension(chunk.name as string) === entrypoint
+              chunk.name === entrypoint
             ) as string
 
             if (entrypoint === undefined) {
