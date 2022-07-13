@@ -1,15 +1,32 @@
 {
+  "../images/vite.svg": {
+    "file": "vite.4a748afd.svg",
+    "src": "../images/vite.svg"
+  },
+  "../images/shopify.svg": {
+    "file": "shopify.ab6ef553.svg",
+    "src": "../images/shopify.svg"
+  },
+  "../fonts/anton-v23-latin-regular.woff2": {
+    "file": "anton-v23-latin-regular.feb9617b.woff2",
+    "src": "../fonts/anton-v23-latin-regular.woff2"
+  },
+  "../fonts/anton-v23-latin-regular.woff": {
+    "file": "anton-v23-latin-regular.70a5bf05.woff",
+    "src": "../fonts/anton-v23-latin-regular.woff"
+  },
   "theme.ts": {
-    "file": "theme.62718997.js",
+    "file": "theme.1c247acc.js",
     "src": "theme.ts",
     "isEntry": true,
-    "dynamicImports": [
-      "../../../node_modules/.pnpm/lodash-es@4.17.21/node_modules/lodash-es/lodash.js"
+    "assets": [
+      "vite.4a748afd.svg",
+      "shopify.ab6ef553.svg"
     ]
   },
-  "../../../node_modules/.pnpm/lodash-es@4.17.21/node_modules/lodash-es/lodash.js": {
-    "file": "lodash.62178161.js",
-    "src": "../../../node_modules/.pnpm/lodash-es@4.17.21/node_modules/lodash-es/lodash.js",
-    "isDynamicEntry": true
+  "theme.scss": {
+    "file": "theme.eeff8d86.css",
+    "src": "theme.scss",
+    "isEntry": true
   }
 }

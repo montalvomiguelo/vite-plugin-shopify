@@ -1,7 +1,25 @@
 import 'vite/modulepreload-polyfill'
+import viteLogo from '@/images/vite.svg'
+import shopifyLogo from '@/images/shopify.svg'
+import { setupCounter } from '@/components/counter'
 
-import('lodash-es')
-  .then(({ default: _ }) => {
-    console.log(_.join(['Vite', '⚡️', 'Shopify'], ' '))
-  })
-  .catch(error => console.log(error))
+const element: HTMLDivElement = document.createElement('div')
+element.className = 'app'
+element.innerHTML = `
+  <a href="https://vitejs.dev" target="_blank">
+    <img src="${viteLogo}" class="logo" alt="Vite logo" />
+  </a>
+  <a href="https://shopify.dev/themes" target="_blank">
+    <img src="${shopifyLogo}" class="logo vanilla" alt="Shopify logo" />
+  </a>
+  <h1>Hello Vite!</h1>
+  <div class="card">
+    <button id="counter" type="button"></button>
+  </div>
+  <p class="read-the-docs">
+    Click on the Vite logo to learn more
+  </p>
+`
+document.body.appendChild(element)
+
+setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
