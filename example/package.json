@@ -9,8 +9,5 @@
     "sass": "^1.52.2",
     "vite": "^3.0.0",
     "vite-plugin-shopify": "workspace:*"
-  },
-  "dependencies": {
-    "lodash-es": "^4.17.21"
   }
 }
