@@ -47,7 +47,6 @@
   },
   "dependencies": {
     "debug": "^4.3.4",
-    "escape-string-regexp": "^4.0.0",
     "fast-glob": "^3.2.11"
   }
 }
