@@ -12,10 +12,9 @@ const debug = createDebugger('vite-plugin-shopify:config')
 function config (config: UserConfig, env: ConfigEnv): UserConfig {
   const assetsDir = './'
   const outDir = relative(root, join(projectRoot, 'assets'))
-  const sourcemap = env.command === 'build'
   const base = './'
   const host = config?.server?.host ?? 'localhost'
-  const port = config?.server?.port ?? 3000
+  const port = config?.server?.port ?? 5173
   const https = config?.server?.https ?? false
   const socketProtocol = https === true ? 'wss' : 'ws'
   const protocol = https === true ? 'https:' : 'http:'
@@ -51,8 +50,6 @@ function config (config: UserConfig, env: ConfigEnv): UserConfig {
       alias
     },
     build: {
-      sourcemap,
-      emptyOutDir: false,
       assetsDir,
       manifest: true,
       outDir,
