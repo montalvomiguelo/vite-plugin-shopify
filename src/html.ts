@@ -1,8 +1,7 @@
 import { join, relative } from 'path'
 import fs from 'fs'
 import { projectRoot, root } from './config'
-import type { Plugin, ResolvedConfig } from 'vite'
-import { OutputChunk } from 'rollup'
+import type { Plugin, ResolvedConfig, Manifest } from 'vite'
 import { ENTRYPOINT_TYPES_REGEX, CSS_EXTENSIONS_REGEX, CLIENT_SCRIPT_PATH } from './constants'
 import { Input } from './types'
 import createDebugger from 'debug'
@@ -32,14 +31,6 @@ export default function VitePluginShopifyHtml (): Plugin {
         viteClient()
       )
 
-      if (snippetFileExists('vite-legacy-tag.liquid')) {
-        writeSnippetFile('vite-legacy-tag.liquid', '')
-      }
-
-      if (snippetFileExists('vite-legacy-polyfills.liquid')) {
-        writeSnippetFile('vite-legacy-polyfills.liquid', '')
-      }
-
       server.watcher.on('add', path => {
         if (!ENTRYPOINT_TYPES_REGEX.test(path)) {
           return
@@ -63,137 +54,44 @@ export default function VitePluginShopifyHtml (): Plugin {
         )
       })
     },
-    generateBundle (options, bundle) {
-      if (options.format === 'es') {
-        const analyzedChunk: Map<OutputChunk, number> = new Map()
-        const getImportedChunks = (
-          chunk: OutputChunk,
-          seen: Set<string> = new Set()
-        ): OutputChunk[] => {
-          const chunks: OutputChunk[] = []
-          chunk.imports.forEach((file) => {
-            const importee = bundle[file]
-            if (importee?.type === 'chunk' && !seen.has(file)) {
-              seen.add(file)
+    closeBundle () {
+      const manifestFilePath = join(projectRoot, 'assets', 'manifest.json')
 
-              chunks.push(...getImportedChunks(importee, seen))
-              chunks.push(importee)
-            }
-          })
-          return chunks
+      const manifest = JSON.parse(
+        fs.readFileSync(manifestFilePath, 'utf-8')
+      ) as Manifest
+
+      debug({ manifest })
+
+      const viteTags = Object.keys(manifest).map(chunkName => {
+        const chunk = manifest[chunkName]
+        const { isEntry, src, imports, file } = chunk
+
+        if (isEntry === undefined) {
+          return ''
         }
 
-        const getCssTagsForChunk = (
-          chunk: OutputChunk,
-          seen: Set<string> = new Set()
-        ): string[] => {
-          const tags: string[] = []
-          if (!analyzedChunk.has(chunk)) {
-            analyzedChunk.set(chunk, 1)
-            chunk.imports.forEach((file) => {
-              const importee = bundle[file]
-              if (importee?.type === 'chunk') {
-                tags.push(...getCssTagsForChunk(importee, seen))
-              }
-            })
-          }
-
-          chunk.viteMetadata.importedCss.forEach((file) => {
-            if (!seen.has(file)) {
-              seen.add(file)
-              tags.push(makeLinkTag({
-                rel: 'stylesheet',
-                href: getAssetUrl(file)
-              }))
-            }
-          })
-
-          return tags
+        if (!config.build.cssCodeSplit && src === 'style.css') {
+          return `{%- if vite-tag == '${src}' -%}\n  ${makeLinkTag({ rel: 'stylesheet', href: getAssetUrl(file) })}\n{%- endif -%}`
         }
 
-        const viteTags = Object.values(bundle).map(chunk => {
-          if (chunk.type === 'asset') {
-            if (!config.build.cssCodeSplit && chunk.name === 'style.css') {
-              return `{%- if vite-tag == '${chunk.name}' -%}\n  ${makeLinkTag({ rel: 'stylesheet', href: getAssetUrl(chunk.fileName) })}\n{%- endif -%}`
-            }
-
-            if (!CSS_EXTENSIONS_REGEX.test(chunk.name as string)) {
-              return ''
-            }
-
-            const entrypoint = Object.keys(entrypoints).find(entrypoint =>
-              CSS_EXTENSIONS_REGEX.test(entrypoint) &&
-              chunk.name === entrypoint
-            ) as string
-
-            if (entrypoint === undefined) {
-              return ''
-            }
-
-            return `{%- if vite-tag == '${entrypoint}' -%}\n  ${makeLinkTag({ rel: 'stylesheet', href: getAssetUrl(chunk.fileName) })}\n{%- endif -%}`
-          }
-
-          if (!chunk.isEntry) {
-            return ''
-          }
-
-          if (CSS_EXTENSIONS_REGEX.test(chunk.name)) {
-            return config.build.cssCodeSplit
-              ? `{%- if vite-tag == '${chunk.name}' -%}\n  ${getCssTagsForChunk(chunk).join('\n  ')}\n{%- endif -%}`
-              : ''
-          }
-
-          const imports = getImportedChunks(chunk)
-          const assetTags = [
-            makeScriptTag({ src: getAssetUrl(chunk.fileName), type: 'module', crossorigin: 'anonymous' }),
-            ...imports.map(chunk => makeLinkTag({ href: getAssetUrl(chunk.fileName), rel: 'modulepreload', as: 'script', crossorigin: 'anonymous' }))
-          ]
-
-          assetTags.push(...getCssTagsForChunk(chunk))
-
-          return `{%- if vite-tag == '${chunk.name}' -%}\n  ${assetTags.join('\n  ')}\n{%- endif -%}`
-        }).filter(Boolean).join('\n\n')
-
-        writeSnippetFile('vite-tag.liquid', viteTags)
-        writeSnippetFile('vite-client.liquid', '')
-      }
-
-      if (options.format === 'system') {
-        const viteLegacyTags = Object.keys(entrypoints).map(key => {
-          const entrypoint = entrypoints[key]
-          const chunk = Object.values(bundle).find(chunk =>
-            chunk.type === 'chunk' &&
-            chunk.isEntry &&
-            chunk.facadeModuleId === entrypoint &&
-            chunk.fileName.includes('-legacy')
-          ) as OutputChunk | undefined
-
-          if (chunk === undefined || CSS_EXTENSIONS_REGEX.test(key)) {
-            return null
-          }
-
-          const legacyTag = makeScriptTag({ src: getAssetUrl(chunk.fileName), nomodule: 'nomodule' })
-
-          return `{%- if vite-legacy-tag == '${key}' -%}\n  ${legacyTag}\n{%- endif -%}`
-        }).filter(Boolean).join('\n\n')
-
-        const polyfillId = '\0vite/legacy-polyfills'
-
-        const polyfillChunk = Object.values(bundle).find(chunk =>
-          chunk.type === 'chunk' &&
-          chunk.isEntry &&
-          chunk.facadeModuleId === polyfillId
-        ) as OutputChunk | undefined
-
-        if (polyfillChunk !== undefined) {
-          const viteLegacyPolyfills = makeScriptTag({ src: getAssetUrl(polyfillChunk.fileName), nomodule: 'nomodule' })
-          writeSnippetFile('vite-legacy-polyfills.liquid', viteLegacyPolyfills)
+        if (CSS_EXTENSIONS_REGEX.test(src as string)) {
+          return `{%- if vite-tag == '${src as string}' -%}\n  ${makeLinkTag({ rel: 'stylesheet', href: getAssetUrl(file) })}\n{%- endif -%}`
         }
 
-        if (viteLegacyTags.length > 0) {
-          writeSnippetFile('vite-legacy-tag.liquid', viteLegacyTags)
+        const assetTags = [
+          makeScriptTag({ src: getAssetUrl(file), type: 'module', crossorigin: 'anonymous' })
+        ]
+
+        if (imports !== undefined) {
+          imports.forEach(file => assetTags.push(makeLinkTag({ href: getAssetUrl(manifest[file].file), rel: 'modulepreload', as: 'script', crossorigin: 'anonymous' })))
         }
-      }
+
+        return `{%- if vite-tag == '${src as string}' -%}\n  ${assetTags.join('\n  ')}\n{%- endif -%}`
+      }).filter(Boolean).join('\n\n')
+
+      writeSnippetFile('vite-tag.liquid', viteTags)
+      writeSnippetFile('vite-client.liquid', '')
     }
   }
 }
@@ -249,8 +147,4 @@ function getAssetUrl (asset: string): string {
   }
 
   return `{{ '${asset}' | asset_url }}`
-}
-
-function snippetFileExists (filename: string): boolean {
-  return fs.existsSync(join(projectRoot, 'snippets', filename))
 }
