@@ -11,7 +11,7 @@ const debug = createDebugger('vite-plugin-shopify:config')
 
 function config (config: UserConfig, env: ConfigEnv): UserConfig {
   const assetsDir = './'
-  const outDir = relative(root, join(projectRoot, 'assets'))
+  const outDir = config?.build?.outDir ?? relative(root, join(projectRoot, 'assets'))
   const base = './'
   const host = config?.server?.host ?? 'localhost'
   const port = config?.server?.port ?? 5173
@@ -19,6 +19,7 @@ function config (config: UserConfig, env: ConfigEnv): UserConfig {
   const socketProtocol = https === true ? 'wss' : 'ws'
   const protocol = https === true ? 'https:' : 'http:'
   const origin = `${protocol}//${host as string}:${port}`
+  const strictPort = config?.server?.strictPort ?? true
   const alias = {
     '~': sourceCodeDir,
     '@': sourceCodeDir
@@ -39,7 +40,7 @@ function config (config: UserConfig, env: ConfigEnv): UserConfig {
       https,
       port,
       origin,
-      strictPort: true,
+      strictPort,
       hmr: {
         host: host as string,
         port,

@@ -19,16 +19,16 @@ export default function VitePluginShopifyHtml (): Plugin {
     },
     configureServer (server) {
       let entrypoints = config.build?.rollupOptions?.input as Input
-      const viteDevServerUrl = devServerUrl(config)
+      const serverUrl = devServerUrl(config)
 
-      debug({ entrypoints, viteDevServerUrl })
+      debug({ entrypoints, serverUrl })
 
-      const viteTags = (entrypoints: Input): string[] => Object.keys(entrypoints).map((key) => {
-        const statements = CSS_EXTENSIONS_REGEX.test(key)
-          ? makeLinkTag({ href: `${viteDevServerUrl}/${key}`, rel: 'stylesheet' })
-          : makeScriptTag({ src: `${viteDevServerUrl}/${key}`, type: 'module' })
+      const viteTags = (entrypoints: Input): string[] => Object.keys(entrypoints).map((entryAlias) => {
+        const statements = CSS_EXTENSIONS_REGEX.test(entryAlias)
+          ? makeLinkTag({ href: `${serverUrl}/${entryAlias}`, rel: 'stylesheet' })
+          : makeScriptTag({ src: `${serverUrl}/${entryAlias}`, type: 'module' })
 
-        return liquidSnippet(key, statements)
+        return liquidSnippet(entryAlias, statements)
       })
 
       server.httpServer?.once('listening', () => {
@@ -39,7 +39,7 @@ export default function VitePluginShopifyHtml (): Plugin {
 
         writeSnippetFile(
           'vite-client.liquid',
-          makeScriptTag({ src: `${viteDevServerUrl}/${CLIENT_SCRIPT_PATH}`, type: 'module' })
+          makeScriptTag({ src: `${serverUrl}/${CLIENT_SCRIPT_PATH}`, type: 'module' })
         )
       })
 
@@ -79,7 +79,11 @@ export default function VitePluginShopifyHtml (): Plugin {
         const chunk = manifest[chunkName]
         const { isEntry, src, imports, file } = chunk
 
-        if (!config.build.cssCodeSplit && src === 'style.css') {
+        if (src === 'style.css') {
+          if (config.build.cssCodeSplit) {
+            return ''
+          }
+
           return liquidSnippet(src, makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) }))
         }
 
