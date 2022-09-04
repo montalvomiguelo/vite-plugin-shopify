@@ -73,11 +73,11 @@ export default function VitePluginShopifyHtml (): Plugin {
         fs.readFileSync(manifestFilePath, 'utf-8')
       ) as Manifest
 
-      debug({ manifest })
-
       const viteTags = Object.keys(manifest).map(chunkName => {
         const chunk = manifest[chunkName]
-        const { isEntry, src, imports, file } = chunk
+        const { isEntry, src, imports, css, file } = chunk
+
+        debug({ chunkName, chunk })
 
         if (src === 'style.css') {
           if (config.build.cssCodeSplit) {
@@ -105,6 +105,10 @@ export default function VitePluginShopifyHtml (): Plugin {
 
         if (imports !== undefined) {
           imports.forEach(file => assetTags.push(makeLinkTag({ href: assetCdnUrl(manifest[file].file), rel: 'modulepreload', as: 'script', crossorigin: 'anonymous' })))
+        }
+
+        if (css !== undefined) {
+          css.forEach(file => assetTags.push(makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) })))
         }
 
         return liquidSnippet(src as string, assetTags.join('\n  '))
