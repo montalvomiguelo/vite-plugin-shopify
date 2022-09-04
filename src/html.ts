@@ -85,11 +85,7 @@ export default function VitePluginShopifyHtml (): Plugin {
 
         debug({ chunkName, chunk })
 
-        if (src === 'style.css') {
-          if (config.build?.cssCodeSplit) {
-            return ''
-          }
-
+        if (src === 'style.css' && !config.build?.cssCodeSplit) {
           return liquidSnippet(src, makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) }))
         }
 
@@ -110,7 +106,18 @@ export default function VitePluginShopifyHtml (): Plugin {
         ]
 
         if (imports !== undefined) {
-          imports.forEach(file => assetTags.push(makeLinkTag({ href: assetCdnUrl(manifest[file].file), rel: 'modulepreload', as: 'script', crossorigin: 'anonymous' })))
+          imports.forEach(importee => {
+            const chunk = manifest[importee]
+            const { css } = chunk
+
+            assetTags.push(makeLinkTag({ href: assetCdnUrl(chunk.file), rel: 'modulepreload', as: 'script', crossorigin: 'anonymous' }))
+
+            if (css == null) {
+              return
+            }
+
+            css.forEach(file => assetTags.push(makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) })))
+          })
         }
 
         if (css !== undefined) {
