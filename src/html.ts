@@ -24,11 +24,11 @@ export default function VitePluginShopifyHtml (): Plugin {
       debug({ entrypoints, viteDevServerUrl })
 
       const viteTags = (entrypoints: Input): string[] => Object.keys(entrypoints).map((key) => {
-        const contentForStatement = CSS_EXTENSIONS_REGEX.test(key)
+        const statements = CSS_EXTENSIONS_REGEX.test(key)
           ? makeLinkTag({ href: `${viteDevServerUrl}/${key}`, rel: 'stylesheet' })
           : makeScriptTag({ src: `${viteDevServerUrl}/${key}`, type: 'module' })
 
-        return `{%- if vite-tag === ${key}-%}\n  ${contentForStatement}\n{%- endif -%}`
+        return liquidSnippet(key, statements)
       })
 
       server.httpServer?.once('listening', () => {
@@ -80,15 +80,19 @@ export default function VitePluginShopifyHtml (): Plugin {
         const { isEntry, src, imports, file } = chunk
 
         if (!config.build.cssCodeSplit && src === 'style.css') {
-          return `{%- if vite-tag == '${src}' -%}\n  ${makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) })}\n{%- endif -%}`
+          return liquidSnippet(src, makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) }))
         }
 
         if (isEntry === undefined) {
           return ''
         }
 
-        if (config.build.cssCodeSplit && CSS_EXTENSIONS_REGEX.test(src as string)) {
-          return `{%- if vite-tag == '${src as string}' -%}\n  ${makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) })}\n{%- endif -%}`
+        if (CSS_EXTENSIONS_REGEX.test(src as string)) {
+          if (!config.build.cssCodeSplit) {
+            return ''
+          }
+
+          return liquidSnippet(src as string, makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) }))
         }
 
         const assetTags = [
@@ -99,13 +103,17 @@ export default function VitePluginShopifyHtml (): Plugin {
           imports.forEach(file => assetTags.push(makeLinkTag({ href: assetCdnUrl(manifest[file].file), rel: 'modulepreload', as: 'script', crossorigin: 'anonymous' })))
         }
 
-        return `{%- if vite-tag == '${src as string}' -%}\n  ${assetTags.join('\n  ')}\n{%- endif -%}`
+        return liquidSnippet(src as string, assetTags.join('\n  '))
       }).filter(Boolean).join('\n\n')
 
       writeSnippetFile('vite-tag.liquid', viteTags)
       writeSnippetFile('vite-client.liquid', '')
     }
   }
+}
+
+function liquidSnippet (entry: string, statements: string): string {
+  return `{%- if vite-tag == '${entry}' -%}\n  ${statements}\n{%- endif -%}`
 }
 
 function writeSnippetFile (filename: string, content: string): void {
