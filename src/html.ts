@@ -3,7 +3,6 @@ import fs from 'fs'
 import { projectRoot, root } from './config'
 import type { Plugin, ResolvedConfig, Manifest } from 'vite'
 import { ENTRYPOINT_TYPES_REGEX, CSS_EXTENSIONS_REGEX, CLIENT_SCRIPT_PATH } from './constants'
-import { Input } from './types'
 import createDebugger from 'debug'
 
 const debug = createDebugger('vite-plugin-shopify:html')
@@ -18,17 +17,19 @@ export default function VitePluginShopifyHtml (): Plugin {
       config = resolvedConfig
     },
     configureServer (server) {
-      let entrypoints = config.build?.rollupOptions?.input as Input
+      const entrypoints = config.build?.rollupOptions?.input as string[]
       const serverUrl = devServerUrl(config)
 
-      debug({ entrypoints, serverUrl })
+      const viteTags = (entrypoints: string[]): string[] => entrypoints.map(file => {
+        const entryName = relative(root, file)
 
-      const viteTags = (entrypoints: Input): string[] => Object.keys(entrypoints).map((entryAlias) => {
-        const statements = CSS_EXTENSIONS_REGEX.test(entryAlias)
-          ? makeLinkTag({ href: `${serverUrl}/${entryAlias}`, rel: 'stylesheet' })
-          : makeScriptTag({ src: `${serverUrl}/${entryAlias}`, type: 'module' })
+        debug({ entryName, entrypoints })
 
-        return liquidSnippet(entryAlias, statements)
+        const statements = CSS_EXTENSIONS_REGEX.test(entryName)
+          ? makeLinkTag({ href: `${serverUrl}/${entryName}`, rel: 'stylesheet' })
+          : makeScriptTag({ src: `${serverUrl}/${entryName}`, type: 'module' })
+
+        return liquidSnippet(entryName, statements)
       })
 
       server.httpServer?.once('listening', () => {
@@ -48,8 +49,8 @@ export default function VitePluginShopifyHtml (): Plugin {
           return
         }
 
-        entrypoints[relative(root, path)] = path
-        debug({ entrypoints })
+        entrypoints.push(path)
+
         writeSnippetFile(
           'vite-tag.liquid',
           viteTags(entrypoints).join('\n\n')
@@ -57,9 +58,14 @@ export default function VitePluginShopifyHtml (): Plugin {
       })
 
       server.watcher.on('unlink', path => {
-        const { [relative(root, path)]: _, ...rest } = entrypoints
-        entrypoints = rest
-        debug({ entrypoints })
+        const index = entrypoints.indexOf(path)
+
+        if (index === -1) {
+          return
+        }
+
+        entrypoints.splice(index, 1)
+
         writeSnippetFile(
           'vite-tag.liquid',
           viteTags(entrypoints).join('\n\n')
@@ -80,7 +86,7 @@ export default function VitePluginShopifyHtml (): Plugin {
         debug({ chunkName, chunk })
 
         if (src === 'style.css') {
-          if (config.build.cssCodeSplit) {
+          if (config.build?.cssCodeSplit) {
             return ''
           }
 
@@ -92,7 +98,7 @@ export default function VitePluginShopifyHtml (): Plugin {
         }
 
         if (CSS_EXTENSIONS_REGEX.test(src as string)) {
-          if (!config.build.cssCodeSplit) {
+          if (!config.build?.cssCodeSplit) {
             return ''
           }
 
@@ -154,8 +160,8 @@ function assetCdnUrl (asset: string): string {
 }
 
 function devServerUrl (config: ResolvedConfig): string {
-  const protocol = config?.server?.https === true ? 'https:' : 'http:'
-  const host = config?.server?.host as string
-  const port = config?.server?.port as number
+  const protocol = config.server?.https === true ? 'https:' : 'http:'
+  const host = config.server?.host as string
+  const port = config.server?.port as number
   return `${protocol}//${host}:${port.toString()}`
 }
