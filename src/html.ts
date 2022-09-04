@@ -67,15 +67,15 @@ export default function VitePluginShopifyHtml (): Plugin {
         const chunk = manifest[chunkName]
         const { isEntry, src, imports, file } = chunk
 
-        if (isEntry === undefined) {
-          return ''
-        }
-
         if (!config.build.cssCodeSplit && src === 'style.css') {
           return `{%- if vite-tag == '${src}' -%}\n  ${makeLinkTag({ rel: 'stylesheet', href: getAssetUrl(file) })}\n{%- endif -%}`
         }
 
-        if (CSS_EXTENSIONS_REGEX.test(src as string)) {
+        if (isEntry === undefined) {
+          return ''
+        }
+
+        if (config.build.cssCodeSplit && CSS_EXTENSIONS_REGEX.test(src as string)) {
           return `{%- if vite-tag == '${src as string}' -%}\n  ${makeLinkTag({ rel: 'stylesheet', href: getAssetUrl(file) })}\n{%- endif -%}`
         }
 
