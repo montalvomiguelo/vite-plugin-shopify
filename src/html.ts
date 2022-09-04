@@ -6,30 +6,42 @@ import { ENTRYPOINT_TYPES_REGEX, CSS_EXTENSIONS_REGEX, CLIENT_SCRIPT_PATH } from
 import { Input } from './types'
 import createDebugger from 'debug'
 
-let config: ResolvedConfig
 const debug = createDebugger('vite-plugin-shopify:html')
 
 export default function VitePluginShopifyHtml (): Plugin {
-  let entrypoints: Input
+  let config: ResolvedConfig
 
   return {
     name: 'vite-plugin-shopify-html',
     enforce: 'post',
     configResolved (resolvedConfig) {
       config = resolvedConfig
-      entrypoints = config.build?.rollupOptions?.input as Input
-      debug({ entrypoints })
     },
     configureServer (server) {
-      writeSnippetFile(
-        'vite-tag.liquid',
-        viteTags(entrypoints)
-      )
+      let entrypoints = config.build?.rollupOptions?.input as Input
+      const viteDevServerUrl = devServerUrl(config)
 
-      writeSnippetFile(
-        'vite-client.liquid',
-        viteClient()
-      )
+      debug({ entrypoints, viteDevServerUrl })
+
+      const viteTags = (entrypoints: Input): string[] => Object.keys(entrypoints).map((key) => {
+        const contentForStatement = CSS_EXTENSIONS_REGEX.test(key)
+          ? makeLinkTag({ href: `${viteDevServerUrl}/${key}`, rel: 'stylesheet' })
+          : makeScriptTag({ src: `${viteDevServerUrl}/${key}`, type: 'module' })
+
+        return `{%- if vite-tag === ${key}-%}\n  ${contentForStatement}\n{%- endif -%}`
+      })
+
+      server.httpServer?.once('listening', () => {
+        writeSnippetFile(
+          'vite-tag.liquid',
+          viteTags(entrypoints).join('\n\n')
+        )
+
+        writeSnippetFile(
+          'vite-client.liquid',
+          makeScriptTag({ src: `${viteDevServerUrl}/${CLIENT_SCRIPT_PATH}`, type: 'module' })
+        )
+      })
 
       server.watcher.on('add', path => {
         if (!ENTRYPOINT_TYPES_REGEX.test(path)) {
@@ -40,7 +52,7 @@ export default function VitePluginShopifyHtml (): Plugin {
         debug({ entrypoints })
         writeSnippetFile(
           'vite-tag.liquid',
-          viteTags(entrypoints)
+          viteTags(entrypoints).join('\n\n')
         )
       })
 
@@ -50,7 +62,7 @@ export default function VitePluginShopifyHtml (): Plugin {
         debug({ entrypoints })
         writeSnippetFile(
           'vite-tag.liquid',
-          viteTags(entrypoints)
+          viteTags(entrypoints).join('\n\n')
         )
       })
     },
@@ -68,7 +80,7 @@ export default function VitePluginShopifyHtml (): Plugin {
         const { isEntry, src, imports, file } = chunk
 
         if (!config.build.cssCodeSplit && src === 'style.css') {
-          return `{%- if vite-tag == '${src}' -%}\n  ${makeLinkTag({ rel: 'stylesheet', href: getAssetUrl(file) })}\n{%- endif -%}`
+          return `{%- if vite-tag == '${src}' -%}\n  ${makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) })}\n{%- endif -%}`
         }
 
         if (isEntry === undefined) {
@@ -76,15 +88,15 @@ export default function VitePluginShopifyHtml (): Plugin {
         }
 
         if (config.build.cssCodeSplit && CSS_EXTENSIONS_REGEX.test(src as string)) {
-          return `{%- if vite-tag == '${src as string}' -%}\n  ${makeLinkTag({ rel: 'stylesheet', href: getAssetUrl(file) })}\n{%- endif -%}`
+          return `{%- if vite-tag == '${src as string}' -%}\n  ${makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) })}\n{%- endif -%}`
         }
 
         const assetTags = [
-          makeScriptTag({ src: getAssetUrl(file), type: 'module', crossorigin: 'anonymous' })
+          makeScriptTag({ src: assetCdnUrl(file), type: 'module', crossorigin: 'anonymous' })
         ]
 
         if (imports !== undefined) {
-          imports.forEach(file => assetTags.push(makeLinkTag({ href: getAssetUrl(manifest[file].file), rel: 'modulepreload', as: 'script', crossorigin: 'anonymous' })))
+          imports.forEach(file => assetTags.push(makeLinkTag({ href: assetCdnUrl(manifest[file].file), rel: 'modulepreload', as: 'script', crossorigin: 'anonymous' })))
         }
 
         return `{%- if vite-tag == '${src as string}' -%}\n  ${assetTags.join('\n  ')}\n{%- endif -%}`
@@ -98,22 +110,6 @@ export default function VitePluginShopifyHtml (): Plugin {
 
 function writeSnippetFile (filename: string, content: string): void {
   return fs.writeFileSync(join(projectRoot, 'snippets', filename), content)
-}
-
-function viteClient (): string {
-  return makeScriptTag({ src: getAssetUrl(CLIENT_SCRIPT_PATH), type: 'module' })
-}
-
-function viteTags (entrypoints: Input): string {
-  return `${Object.keys(entrypoints)
-    .map(viteTag)
-    .join('\n\n')}`
-}
-
-function viteTag (entrypoint: string): string {
-  return `{%- if vite-tag == '${entrypoint}' -%}\n  ${CSS_EXTENSIONS_REGEX.test(entrypoint)
-      ? makeLinkTag({ href: getAssetUrl(entrypoint), rel: 'stylesheet' })
-      : makeScriptTag({ src: getAssetUrl(entrypoint), type: 'module' })}\n{%- endif -%}`
 }
 
 function makeHtmlAttributes (attributes: Record<string, string>): string {
@@ -137,14 +133,13 @@ function makeScriptTag (attributes: Record<string, string>): string {
   return `<script${makeHtmlAttributes(attributes)}></script>`
 }
 
-function getAssetUrl (asset: string): string {
-  if (config.command === 'serve') {
-    const protocol = config?.server?.https === true ? 'https:' : 'http:'
-    const host = config?.server?.host as string
-    const port = config?.server?.port as number
-
-    return `${protocol}//${host}:${port.toString()}/${asset}`
-  }
-
+function assetCdnUrl (asset: string): string {
   return `{{ '${asset}' | asset_url }}`
+}
+
+function devServerUrl (config: ResolvedConfig): string {
+  const protocol = config?.server?.https === true ? 'https:' : 'http:'
+  const host = config?.server?.host as string
+  const port = config?.server?.port as number
+  return `${protocol}//${host}:${port.toString()}`
 }
