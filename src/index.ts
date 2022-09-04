@@ -1,5 +1,5 @@
 import { join, relative } from 'path'
-import { normalizePath, mergeConfig } from 'vite'
+import { normalizePath } from 'vite'
 import type { ConfigEnv, PluginOption, UserConfig } from 'vite'
 import { Entrypoints } from './types'
 import glob from 'fast-glob'
@@ -30,7 +30,7 @@ function config (config: UserConfig, env: ConfigEnv): UserConfig {
 
   debug({ root, host, https, protocol, socketProtocol, port, base, origin, entrypoints })
 
-  return mergeConfig({
+  return {
     root,
     base,
     publicDir: false,
@@ -41,7 +41,7 @@ function config (config: UserConfig, env: ConfigEnv): UserConfig {
       origin,
       strictPort: true,
       hmr: {
-        host,
+        host: host as string,
         port,
         protocol: socketProtocol
       }
@@ -58,7 +58,7 @@ function config (config: UserConfig, env: ConfigEnv): UserConfig {
         output: outputOptions(assetsDir)
       }
     }
-  }, config)
+  }
 }
 
 export default function VitePluginShopify (): PluginOption[] {
