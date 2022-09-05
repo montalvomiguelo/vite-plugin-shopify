@@ -20,22 +20,10 @@ export default function VitePluginShopifyHtml (): Plugin {
       const entrypoints = config.build?.rollupOptions?.input as string[]
       const serverUrl = devServerUrl(config)
 
-      const viteTags = (entrypoints: string[]): string[] => entrypoints.map(file => {
-        const entryName = relative(root, file)
-
-        debug({ entryName, entrypoints })
-
-        const statements = CSS_EXTENSIONS_REGEX.test(entryName)
-          ? makeLinkTag({ href: `${serverUrl}/${entryName}`, rel: 'stylesheet' })
-          : makeScriptTag({ src: `${serverUrl}/${entryName}`, type: 'module' })
-
-        return liquidSnippet(entryName, statements)
-      })
-
       server.httpServer?.once('listening', () => {
         writeSnippetFile(
           'vite-tag.liquid',
-          viteTags(entrypoints).join('\n\n')
+          viteTagsDevelopment(entrypoints, serverUrl).join('\n\n')
         )
 
         writeSnippetFile(
@@ -53,7 +41,7 @@ export default function VitePluginShopifyHtml (): Plugin {
 
         writeSnippetFile(
           'vite-tag.liquid',
-          viteTags(entrypoints).join('\n\n')
+          viteTagsDevelopment(entrypoints, serverUrl).join('\n\n')
         )
       })
 
@@ -68,7 +56,7 @@ export default function VitePluginShopifyHtml (): Plugin {
 
         writeSnippetFile(
           'vite-tag.liquid',
-          viteTags(entrypoints).join('\n\n')
+          viteTagsDevelopment(entrypoints, serverUrl).join('\n\n')
         )
       })
     },
@@ -79,53 +67,7 @@ export default function VitePluginShopifyHtml (): Plugin {
         fs.readFileSync(manifestFilePath, 'utf-8')
       ) as Manifest
 
-      const viteTags = Object.keys(manifest).map(chunkName => {
-        const chunk = manifest[chunkName]
-        const { isEntry, src, imports, css, file } = chunk
-
-        debug({ chunkName, chunk })
-
-        if (src === 'style.css' && !config.build?.cssCodeSplit) {
-          return liquidSnippet(src, makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) }))
-        }
-
-        if (isEntry === undefined) {
-          return ''
-        }
-
-        if (CSS_EXTENSIONS_REGEX.test(src as string)) {
-          if (!config.build?.cssCodeSplit) {
-            return ''
-          }
-
-          return liquidSnippet(src as string, makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) }))
-        }
-
-        const assetTags = [
-          makeScriptTag({ src: assetCdnUrl(file), type: 'module', crossorigin: 'anonymous' })
-        ]
-
-        if (imports !== undefined) {
-          imports.forEach(importee => {
-            const chunk = manifest[importee]
-            const { css } = chunk
-
-            assetTags.push(makeLinkTag({ href: assetCdnUrl(chunk.file), rel: 'modulepreload', as: 'script', crossorigin: 'anonymous' }))
-
-            if (css == null) {
-              return
-            }
-
-            css.forEach(file => assetTags.push(makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) })))
-          })
-        }
-
-        if (css !== undefined) {
-          css.forEach(file => assetTags.push(makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) })))
-        }
-
-        return liquidSnippet(src as string, assetTags.join('\n  '))
-      }).filter(Boolean).join('\n\n')
+      const viteTags = viteTagsProduction(manifest, config)
 
       writeSnippetFile('vite-tag.liquid', viteTags)
       writeSnippetFile('vite-client.liquid', '')
@@ -171,4 +113,68 @@ function devServerUrl (config: ResolvedConfig): string {
   const host = config.server?.host as string
   const port = config.server?.port as number
   return `${protocol}//${host}:${port.toString()}`
+}
+
+function viteTagsProduction (manifest: Manifest, config: ResolvedConfig): string {
+  return Object.keys(manifest).map(chunkName => {
+    const chunk = manifest[chunkName]
+    const { isEntry, src, imports, css, file } = chunk
+
+    debug({ chunkName, chunk })
+
+    if (src === 'style.css' && !config.build?.cssCodeSplit) {
+      return liquidSnippet(src, makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) }))
+    }
+
+    if (isEntry === undefined) {
+      return ''
+    }
+
+    if (CSS_EXTENSIONS_REGEX.test(src as string)) {
+      if (!config.build?.cssCodeSplit) {
+        return ''
+      }
+
+      return liquidSnippet(src as string, makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) }))
+    }
+
+    const assetTags = [
+      makeScriptTag({ src: assetCdnUrl(file), type: 'module', crossorigin: 'anonymous' })
+    ]
+
+    if (imports !== undefined) {
+      imports.forEach(importee => {
+        const chunk = manifest[importee]
+        const { css } = chunk
+
+        assetTags.push(makeLinkTag({ href: assetCdnUrl(chunk.file), rel: 'modulepreload', as: 'script', crossorigin: 'anonymous' }))
+
+        if (css == null) {
+          return
+        }
+
+        css.forEach(file => assetTags.push(makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) })))
+      })
+    }
+
+    if (css !== undefined) {
+      css.forEach(file => assetTags.push(makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) })))
+    }
+
+    return liquidSnippet(src as string, assetTags.join('\n  '))
+  }).filter(Boolean).join('\n\n')
+}
+
+function viteTagsDevelopment (entrypoints: string[], serverUrl: string): string[] {
+  return entrypoints.map(file => {
+    const entryName = relative(root, file)
+
+    debug({ entryName, entrypoints })
+
+    const statements = CSS_EXTENSIONS_REGEX.test(entryName)
+      ? makeLinkTag({ href: `${serverUrl}/${entryName}`, rel: 'stylesheet' })
+      : makeScriptTag({ src: `${serverUrl}/${entryName}`, type: 'module' })
+
+    return liquidSnippet(entryName, statements)
+  })
 }
