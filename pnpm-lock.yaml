@@ -5,7 +5,7 @@ importers:
   .:
     specifiers:
       '@types/debug': ^4.1.7
-      '@types/node': ^17.0.39
+      '@types/node': ^18.11.3
       '@typescript-eslint/eslint-plugin': ^5.0.0
       '@typescript-eslint/parser': ^5.0.0
       debug: ^4.3.4
@@ -23,7 +23,7 @@ importers:
       fast-glob: 3.2.12
     devDependencies:
       '@types/debug': 4.1.7
-      '@types/node': 17.0.45
+      '@types/node': 18.11.3
       '@typescript-eslint/eslint-plugin': 5.40.1_b2hyt4uhce64ixf5gm7tr3b2q4
       '@typescript-eslint/parser': 5.40.1_66ebqomvqqrlamrhelbojp4ou4
       eslint: 8.26.0
@@ -140,8 +140,8 @@ packages:
     resolution: {integrity: sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==}
     dev: true
 
-  /@types/node/17.0.45:
-    resolution: {integrity: sha512-w+tIMs3rq2afQdsPJlODhoUEKzFP1ayaoyl1CcnwtIlsVe7K7bA1NGm4s3PraqTLlXnbIN84zuBlxBWo1u9BLw==}
+  /@types/node/18.11.3:
+    resolution: {integrity: sha512-fNjDQzzOsZeKZu5NATgXUPsaFaTxeRgFXoosrHivTl8RGeV733OLawXsGfEk9a8/tySyZUyiZ6E8LcjPFZ2y1A==}
     dev: true
 
   /@types/semver/7.3.12:
