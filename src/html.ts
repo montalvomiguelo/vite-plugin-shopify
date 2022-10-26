@@ -1,13 +1,12 @@
-import { join, relative } from 'path'
-import fs from 'fs'
-import { projectRoot, root } from './config'
-import type { Plugin, ResolvedConfig, Manifest } from 'vite'
-import { ENTRYPOINT_TYPES_REGEX, CSS_EXTENSIONS_REGEX, CLIENT_SCRIPT_PATH } from './constants'
+// import { join, relative } from 'path'
+// import fs from 'fs'
+import type { Plugin, ResolvedConfig } from 'vite'
+import { Options } from './types'
 import createDebugger from 'debug'
 
 const debug = createDebugger('vite-plugin-shopify:html')
 
-export default function VitePluginShopifyHtml (): Plugin {
+export default function VitePluginShopifyHtml (options: Options): Plugin {
   let config: ResolvedConfig
 
   return {
@@ -17,18 +16,23 @@ export default function VitePluginShopifyHtml (): Plugin {
       config = resolvedConfig
     },
     configureServer (server) {
-      const entrypoints = config.build?.rollupOptions?.input as string[]
-      const serverUrl = devServerUrl(config)
+      const entrypoints = config.build?.rollupOptions?.input
+      // const serverUrl = devServerUrl(config)
 
+      debug({ entrypoints })
+
+      /*
       server.httpServer?.once('listening', () => {
         writeSnippetFile(
           'vite-tag.liquid',
-          viteTagsDevelopment(entrypoints, serverUrl).join('\n\n')
+          viteTagsDevelopment(entrypoints, serverUrl).join('\n\n'),
+          options.themeRoot as string
         )
 
         writeSnippetFile(
           'vite-client.liquid',
-          makeScriptTag({ src: `${serverUrl}/${CLIENT_SCRIPT_PATH}`, type: 'module' })
+          makeScriptTag({ src: `${serverUrl}/${CLIENT_SCRIPT_PATH}`, type: 'module' }),
+          options.themeRoot as string
         )
       })
 
@@ -41,7 +45,8 @@ export default function VitePluginShopifyHtml (): Plugin {
 
         writeSnippetFile(
           'vite-tag.liquid',
-          viteTagsDevelopment(entrypoints, serverUrl).join('\n\n')
+          viteTagsDevelopment(entrypoints, serverUrl).join('\n\n'),
+          options.themeRoot as string
         )
       })
 
@@ -56,31 +61,39 @@ export default function VitePluginShopifyHtml (): Plugin {
 
         writeSnippetFile(
           'vite-tag.liquid',
-          viteTagsDevelopment(entrypoints, serverUrl).join('\n\n')
+          viteTagsDevelopment(entrypoints, serverUrl).join('\n\n'),
+          options.themeRoot as string
         )
       })
+      */
     },
     closeBundle () {
-      const manifestFilePath = join(projectRoot, 'assets', 'manifest.json')
+      // const manifestFilePath = join(options.themeRoot as string, 'assets', 'manifest.json')
 
+      debug({ options })
+
+      /*
       const manifest = JSON.parse(
         fs.readFileSync(manifestFilePath, 'utf-8')
       ) as Manifest
 
       const viteTags = viteTagsProduction(manifest, config)
 
-      writeSnippetFile('vite-tag.liquid', viteTags)
-      writeSnippetFile('vite-client.liquid', '')
+      writeSnippetFile('vite-tag.liquid', viteTags, options.themeRoot as string)
+      writeSnippetFile('vite-client.liquid', '', options.themeRoot as string)
+      */
     }
   }
 }
+
+/*
 
 function liquidSnippet (entry: string, statements: string): string {
   return `{%- if vite-tag == '${entry}' -%}\n  ${statements}\n{%- endif -%}`
 }
 
-function writeSnippetFile (filename: string, content: string): void {
-  return fs.writeFileSync(join(projectRoot, 'snippets', filename), content)
+function writeSnippetFile (filename: string, content: string, themeRoot: string): void {
+  return fs.writeFileSync(join(themeRoot as string, 'snippets', filename), content)
 }
 
 function makeHtmlAttributes (attributes: Record<string, string>): string {
@@ -178,3 +191,4 @@ function viteTagsDevelopment (entrypoints: string[], serverUrl: string): string[
     return liquidSnippet(entryName, statements)
   })
 }
+*/

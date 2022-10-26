@@ -1,4 +1,5 @@
 import 'vite/modulepreload-polyfill'
+/*
 import viteLogo from '@/images/vite.svg'
 import shopifyLogo from '@/images/shopify.svg'
 import { setupCounter } from '@/components/counter'
@@ -23,3 +24,4 @@ element.innerHTML = `
 document.body.appendChild(element)
 
 setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+*/
