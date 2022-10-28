@@ -18,7 +18,7 @@
   },
   "scripts": {
     "dev": "npm run build -- --watch",
-    "build": "tsup src/index.ts --dts --format cjs,esm",
+    "build": "tsup src/index.ts --dts --format cjs,esm --clean",
     "watch": "tsup src/index.ts --dts --format cjs,esm --watch",
     "example:dev": "npm -C example run dev",
     "example:build": "npm -C example run build",
