@@ -9,6 +9,10 @@ export function resolveOptions (config: Options): Options {
     config = { input: config }
   }
 
+  if (typeof config.input === 'undefined') {
+    throw new Error('vite-plugin-shopify: missing configuration for "input".')
+  }
+
   if (typeof config.themeRoot === 'string') {
     config.themeRoot = config.themeRoot.trim().replace(/^\/+/, '')
 
