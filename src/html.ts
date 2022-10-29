@@ -1,6 +1,7 @@
-// import { join, relative } from 'path'
-// import fs from 'fs'
-import type { Plugin, ResolvedConfig } from 'vite'
+import { join } from 'path'
+import fs from 'fs'
+import type { Plugin, ResolvedConfig, Manifest } from 'vite'
+import { CLIENT_SCRIPT_PATH, CSS_EXTENSIONS_REGEX, KNOWN_CSS_EXTENSIONS } from './constants'
 import { Options } from './types'
 import createDebugger from 'debug'
 
@@ -16,84 +17,47 @@ export default function VitePluginShopifyHtml (options: Options): Plugin {
       config = resolvedConfig
     },
     configureServer (server) {
-      const entrypoints = config.build?.rollupOptions?.input
-      // const serverUrl = devServerUrl(config)
+      const serverUrl = devServerUrl(config)
 
-      debug({ entrypoints })
+      writeSnippetFile(
+        'vite-tag.liquid',
+        themeCheckDisable(['UndefinedObject'])
+          .concat('\n')
+          .concat(viteTagsDevelopment(serverUrl)),
+        options.themeRoot as string
+      )
 
-      /*
-      server.httpServer?.once('listening', () => {
-        writeSnippetFile(
-          'vite-tag.liquid',
-          viteTagsDevelopment(entrypoints, serverUrl).join('\n\n'),
-          options.themeRoot as string
-        )
-
-        writeSnippetFile(
-          'vite-client.liquid',
-          makeScriptTag({ src: `${serverUrl}/${CLIENT_SCRIPT_PATH}`, type: 'module' }),
-          options.themeRoot as string
-        )
-      })
-
-      server.watcher.on('add', path => {
-        if (!ENTRYPOINT_TYPES_REGEX.test(path)) {
-          return
-        }
-
-        entrypoints.push(path)
-
-        writeSnippetFile(
-          'vite-tag.liquid',
-          viteTagsDevelopment(entrypoints, serverUrl).join('\n\n'),
-          options.themeRoot as string
-        )
-      })
-
-      server.watcher.on('unlink', path => {
-        const index = entrypoints.indexOf(path)
-
-        if (index === -1) {
-          return
-        }
-
-        entrypoints.splice(index, 1)
-
-        writeSnippetFile(
-          'vite-tag.liquid',
-          viteTagsDevelopment(entrypoints, serverUrl).join('\n\n'),
-          options.themeRoot as string
-        )
-      })
-      */
+      writeSnippetFile(
+        'vite-client.liquid',
+        themeCheckDisable(['RemoteAsset'])
+          .concat('\n')
+          .concat(makeScriptTag({ src: `${serverUrl}/${CLIENT_SCRIPT_PATH}`, type: 'module' })),
+        options.themeRoot as string
+      )
     },
     closeBundle () {
-      // const manifestFilePath = join(options.themeRoot as string, 'assets', 'manifest.json')
+      const manifestFilePath = join(options.themeRoot as string, 'assets', 'manifest.json')
 
-      debug({ options })
-
-      /*
       const manifest = JSON.parse(
         fs.readFileSync(manifestFilePath, 'utf-8')
       ) as Manifest
 
-      const viteTags = viteTagsProduction(manifest, config)
+      const viteTags = themeCheckDisable(['UndefinedObject'])
+        .concat('\n\n')
+        .concat(viteTagsProduction(manifest, config))
 
       writeSnippetFile('vite-tag.liquid', viteTags, options.themeRoot as string)
       writeSnippetFile('vite-client.liquid', '', options.themeRoot as string)
-      */
     }
   }
 }
-
-/*
 
 function liquidSnippet (entry: string, statements: string): string {
   return `{%- if vite-tag == '${entry}' -%}\n  ${statements}\n{%- endif -%}`
 }
 
 function writeSnippetFile (filename: string, content: string, themeRoot: string): void {
-  return fs.writeFileSync(join(themeRoot as string, 'snippets', filename), content)
+  return fs.writeFileSync(join(themeRoot, 'snippets', filename), content)
 }
 
 function makeHtmlAttributes (attributes: Record<string, string>): string {
@@ -129,11 +93,11 @@ function devServerUrl (config: ResolvedConfig): string {
 }
 
 function viteTagsProduction (manifest: Manifest, config: ResolvedConfig): string {
+  debug({ manifest })
+
   return Object.keys(manifest).map(chunkName => {
     const chunk = manifest[chunkName]
     const { isEntry, src, imports, css, file } = chunk
-
-    debug({ chunkName, chunk })
 
     if (src === 'style.css' && !config.build?.cssCodeSplit) {
       return liquidSnippet(src, makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) }))
@@ -178,17 +142,24 @@ function viteTagsProduction (manifest: Manifest, config: ResolvedConfig): string
   }).filter(Boolean).join('\n\n')
 }
 
-function viteTagsDevelopment (entrypoints: string[], serverUrl: string): string[] {
-  return entrypoints.map(file => {
-    const entryName = relative(root, file)
-
-    debug({ entryName, entrypoints })
-
-    const statements = CSS_EXTENSIONS_REGEX.test(entryName)
-      ? makeLinkTag({ href: `${serverUrl}/${entryName}`, rel: 'stylesheet' })
-      : makeScriptTag({ src: `${serverUrl}/${entryName}`, type: 'module' })
-
-    return liquidSnippet(entryName, statements)
-  })
+function viteTagsDevelopment (serverUrl: string): string {
+  return `{%- liquid
+  assign css_extensions = '${KNOWN_CSS_EXTENSIONS.join('|')}' | split: '|' 
+  assign file_name = vite-tag | split: '/' | last
+  assign file_extension = file_name | split: '.' | last
+  assign is_css = false
+  if css_extensions contains file_extension
+    assign is_css = true
+  endif
+  assign file_url = vite-tag | prepend: '/' | prepend: '${serverUrl}'
+-%}
+{%- if is_css -%}
+  ${makeLinkTag({ href: '{{ file_url }}', rel: 'stylesheet' })}
+{%- else -%}
+  ${makeScriptTag({ src: '{{ file_url }}', type: 'module' })}
+{%- endif -%}`
 }
-*/
+
+function themeCheckDisable (checks: string[]): string {
+  return `{%- # theme-check-disable ${checks.join(',')} -%}`
+}
