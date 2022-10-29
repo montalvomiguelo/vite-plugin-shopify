@@ -9,7 +9,7 @@ function resolveInput (config: Options): string | string[] | undefined {
   return config.input
 }
 
-export default function config (options: Options): Plugin {
+export default function VitePluginShopifyConfig (options: Options): Plugin {
   return {
     name: 'vite-plugin-shopify',
     config: function (config: UserConfig, _env: ConfigEnv): UserConfig {
