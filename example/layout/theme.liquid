@@ -11,9 +11,11 @@
 
   <meta name="description" content="">
 
-  {%- render 'vite-client' -%}
-  {%- render 'vite-tag' with 'theme.scss' -%}
-  {%- render 'vite-tag' with 'theme.ts' -%}
+  {%- liquid
+    render 'vite-client'
+    render 'vite-tag' with 'resources/css/theme.css'
+    render 'vite-tag' with 'resources/js/theme.ts'
+  -%}
 
   {{ content_for_header }}
 </head>
