@@ -30,6 +30,7 @@ export interface Options {
 
 ```liquid
 {%- liquid
+  # theme.liquid
   render 'vite-client'
   render 'vite-tag' with 'resources/css/theme.css'
   render 'vite-tag' with 'resources/js/theme.ts'
