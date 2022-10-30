@@ -32,8 +32,10 @@ export interface Options {
 
 ```liquid
 {%- liquid
-  # theme.liquid
+  # The Vite client script
   render 'vite-client'
+
+  # The tag for a given entrypoint
   render 'vite-tag' with 'resources/css/theme.css'
   render 'vite-tag' with 'resources/js/theme.ts'
 -%}
