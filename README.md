@@ -1,5 +1,7 @@
 # vite-plugin-shopify
 
+Vite plugin for developing Shopify themes.
+
 ## Usage
 
 ```js
