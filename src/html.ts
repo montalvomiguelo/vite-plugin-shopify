@@ -28,6 +28,14 @@ export default function VitePluginShopifyHtml (options: Options): Plugin {
       )
 
       writeSnippetFile(
+        'vite-asset.liquid',
+        themeCheckDisable(['UndefinedObject'])
+          .concat('\n')
+          .concat(viteAssetDevelopment(serverUrl)),
+        options.themeRoot as string
+      )
+
+      writeSnippetFile(
         'vite-client.liquid',
         themeCheckDisable(['RemoteAsset'])
           .concat('\n')
@@ -42,18 +50,23 @@ export default function VitePluginShopifyHtml (options: Options): Plugin {
         fs.readFileSync(manifestFilePath, 'utf-8')
       ) as Manifest
 
-      const viteTags = themeCheckDisable(['UndefinedObject'])
+      const viteTags = themeCheckDisable(['UndefinedObject', 'LiquidTag'])
         .concat('\n\n')
         .concat(viteTagsProduction(manifest, config))
 
+      const viteAssets = themeCheckDisable(['UndefinedObject', 'LiquidTag'])
+        .concat('\n\n')
+        .concat(viteAssetsProduction(manifest, config))
+
       writeSnippetFile('vite-tag.liquid', viteTags, options.themeRoot as string)
+      writeSnippetFile('vite-asset.liquid', viteAssets, options.themeRoot as string)
       writeSnippetFile('vite-client.liquid', '', options.themeRoot as string)
     }
   }
 }
 
-function liquidSnippet (entry: string, statements: string): string {
-  return `{%- if vite-tag == '${entry}' -%}\n  ${statements}\n{%- endif -%}`
+function liquidSnippet (snippet: string, entry: string, statements: string): string {
+  return `{%- if ${snippet} == '${entry}' -%}\n  ${statements}\n{%- endif -%}`
 }
 
 function writeSnippetFile (filename: string, content: string, themeRoot: string): void {
@@ -82,7 +95,7 @@ function makeScriptTag (attributes: Record<string, string>): string {
 }
 
 function assetCdnUrl (asset: string): string {
-  return `{{ '${asset}' | asset_url }}`
+  return `{{- '${asset}' | asset_url -}}`
 }
 
 function devServerUrl (config: ResolvedConfig): string {
@@ -100,7 +113,7 @@ function viteTagsProduction (manifest: Manifest, config: ResolvedConfig): string
     const { isEntry, src, imports, css, file } = chunk
 
     if (src === 'style.css' && !config.build?.cssCodeSplit) {
-      return liquidSnippet(src, makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) }))
+      return liquidSnippet('vite-tag', src, makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) }))
     }
 
     if (isEntry === undefined) {
@@ -112,7 +125,7 @@ function viteTagsProduction (manifest: Manifest, config: ResolvedConfig): string
         return ''
       }
 
-      return liquidSnippet(src as string, makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) }))
+      return liquidSnippet('vite-tag', src as string, makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) }))
     }
 
     const assetTags = [
@@ -138,7 +151,20 @@ function viteTagsProduction (manifest: Manifest, config: ResolvedConfig): string
       css.forEach(file => assetTags.push(makeLinkTag({ rel: 'stylesheet', href: assetCdnUrl(file) })))
     }
 
-    return liquidSnippet(src as string, assetTags.join('\n  '))
+    return liquidSnippet('vite-tag', src as string, assetTags.join('\n  '))
+  }).filter(Boolean).join('\n\n')
+}
+
+function viteAssetsProduction (manifest: Manifest, config: ResolvedConfig): string {
+  return Object.keys(manifest).map(chunkName => {
+    const chunk = manifest[chunkName]
+    const { isEntry, isDynamicEntry, file, src } = chunk
+
+    if (isEntry === undefined || !isEntry || isDynamicEntry === undefined || !isDynamicEntry) {
+      return ''
+    }
+
+    return liquidSnippet('vite-asset', src as string, assetCdnUrl(file))
   }).filter(Boolean).join('\n\n')
 }
 
@@ -160,6 +186,10 @@ function viteTagsDevelopment (serverUrl: string): string {
 {%- endif -%}`
 }
 
+function viteAssetDevelopment (serverUrl: string): string {
+  return `{{- vite-asset | prepend: '/' | prepend: '${serverUrl}' -}}`
+}
+
 function themeCheckDisable (checks: string[]): string {
-  return `{%- # theme-check-disable ${checks.join(',')} -%}`
+  return `{%- # theme-check-disable ${checks.join(', ')} -%}`
 }

@@ -38,3 +38,11 @@ export interface Options {
   render 'vite-tag' with 'resources/js/theme.ts'
 -%}
 ```
+
+```liquid
+
+{%- liquid
+  # The URL for a given asset
+  render 'vite-asset' with 'resources/js/theme.ts'
+-%}
+```
