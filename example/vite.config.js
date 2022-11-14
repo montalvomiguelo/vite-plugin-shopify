@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [
     shopify([
       'resources/css/theme.css',
-      'resources/js/theme.ts'
+      'resources/js/theme.js'
     ])
   ]
 })

@@ -1,12 +1,9 @@
 class HelloWorld extends window.HTMLElement {
-  button: HTMLButtonElement
-  output: HTMLOutputElement
-
   constructor () {
     super()
 
-    this.button = this.querySelector('button') as HTMLButtonElement
-    this.output = this.querySelector('output') as HTMLOutputElement
+    this.button = this.querySelector('button')
+    this.output = this.querySelector('output')
 
     this.button.addEventListener('click', event => {
       event.preventDefault()
