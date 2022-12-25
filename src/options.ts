@@ -22,7 +22,7 @@ export function resolveOptions (config: Options): Options {
   }
 
   return {
-    input: config.input ?? 'resources/js/theme.js',
+    input: config.input,
     themeRoot: config.themeRoot ?? process.cwd()
   }
 }
