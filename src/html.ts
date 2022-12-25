@@ -21,9 +21,7 @@ export default function VitePluginShopifyHtml (options: Options): Plugin {
 
       writeSnippetFile(
         'vite-tag.liquid',
-        themeCheckDisable(['UndefinedObject'])
-          .concat('\n')
-          .concat(viteTagsDevelopment(serverUrl)),
+        viteTagsDevelopment(serverUrl),
         options.themeRoot as string
       )
 
@@ -42,11 +40,7 @@ export default function VitePluginShopifyHtml (options: Options): Plugin {
         fs.readFileSync(manifestFilePath, 'utf-8')
       ) as Manifest
 
-      const viteTags = themeCheckDisable(['UndefinedObject'])
-        .concat('\n\n')
-        .concat(viteTagsProduction(manifest, config))
-
-      writeSnippetFile('vite-tag.liquid', viteTags, options.themeRoot as string)
+      writeSnippetFile('vite-tag.liquid', viteTagsProduction(manifest, config), options.themeRoot as string)
       writeSnippetFile('vite-client.liquid', '', options.themeRoot as string)
     }
   }
