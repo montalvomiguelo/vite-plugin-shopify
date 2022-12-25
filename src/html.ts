@@ -16,7 +16,7 @@ export default function VitePluginShopifyHtml (options: Options): Plugin {
     configResolved (resolvedConfig) {
       config = resolvedConfig
     },
-    configureServer (server) {
+    configureServer (_server) {
       const serverUrl = devServerUrl(config)
 
       writeSnippetFile(
@@ -144,7 +144,7 @@ function viteTagsProduction (manifest: Manifest, config: ResolvedConfig): string
 
 function viteTagsDevelopment (serverUrl: string): string {
   return `{%- liquid
-  assign css_extensions = '${KNOWN_CSS_EXTENSIONS.join('|')}' | split: '|' 
+  assign css_extensions = '${KNOWN_CSS_EXTENSIONS.join('|')}' | split: '|'
   assign file_name = vite-tag | split: '/' | last
   assign file_extension = file_name | split: '.' | last
   assign is_css = false
