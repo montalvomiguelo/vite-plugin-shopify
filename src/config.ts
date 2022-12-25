@@ -55,7 +55,7 @@ export default function VitePluginShopifyConfig (options: Options): Plugin {
         },
         build: {
           assetsDir: config.build?.assetsDir ?? './',
-          manifest: config.build?.manifest ?? false,
+          manifest: config.build?.manifest ?? true,
           outDir: config.build?.outDir ?? relative(options.themeRoot as string, 'assets'),
           rollupOptions: {
             input: config.build?.rollupOptions?.input ?? options.input
