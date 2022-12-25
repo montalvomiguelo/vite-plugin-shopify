@@ -5,44 +5,39 @@ import createDebugger from 'debug'
 
 const debug = createDebugger('vite-plugin-shopify:config')
 
-function resolveInput (config: Options): string | string[] | undefined {
-  return config.input
-}
-
 export default function VitePluginShopifyConfig (options: Options): Plugin {
   return {
     name: 'vite-plugin-shopify',
     config: function (config: UserConfig, _env: ConfigEnv): UserConfig {
-      const assetsDir = './'
-      const outDir = relative(options.themeRoot as string, 'assets')
-      const base = './'
       const host = config.server?.host ?? 'localhost'
       const port = config.server?.port ?? 5173
       const https = config.server?.https ?? false
       const socketProtocol = https === true ? 'wss' : 'ws'
       const protocol = https === true ? 'https:' : 'http:'
-      const origin = `${protocol}//${host as string}:${port}`
-      const strictPort = config.server?.strictPort ?? true
+      const origin = config.server?.origin ?? `${protocol}//${host as string}:${port}`
       const defaultAliases: Record<string, string> = {
         '@': '/resources/js'
       }
 
-      debug({ outDir, host, https, port, protocol, strictPort, origin, socketProtocol, config, options })
+      debug({ host, https, port, protocol, origin, socketProtocol, config, options })
 
       return {
-        base,
-        publicDir: false,
+        base: config.base ?? './',
+        publicDir: config.publicDir ?? false,
         server: {
           host,
           https,
           port,
           origin,
-          strictPort,
-          hmr: {
-            host: host as string,
-            port,
-            protocol: socketProtocol
-          }
+          strictPort: config.server?.strictPort ?? true,
+          hmr: config.server?.hmr === false
+            ? false
+            : {
+                host: host as string,
+                port,
+                protocol: socketProtocol,
+                ...config.server?.hmr === true ? {} : config.server?.hmr
+              }
         },
         resolve: {
           alias: Array.isArray(config.resolve?.alias)
@@ -59,11 +54,11 @@ export default function VitePluginShopifyConfig (options: Options): Plugin {
               }
         },
         build: {
-          assetsDir,
-          manifest: true,
-          outDir,
+          assetsDir: config.build?.assetsDir ?? './',
+          manifest: config.build?.manifest ?? false,
+          outDir: config.build?.outDir ?? relative(options.themeRoot as string, 'assets'),
           rollupOptions: {
-            input: config.build?.rollupOptions?.input ?? resolveInput(options)
+            input: config.build?.rollupOptions?.input ?? options.input
           }
         }
       }
