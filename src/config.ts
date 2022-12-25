@@ -7,7 +7,7 @@ const debug = createDebugger('vite-plugin-shopify:config')
 
 export default function VitePluginShopifyConfig (options: Options): Plugin {
   return {
-    name: 'vite-plugin-shopify',
+    name: 'vite-plugin-shopify:config',
     config: function (config: UserConfig, _env: ConfigEnv): UserConfig {
       const host = config.server?.host ?? 'localhost'
       const port = config.server?.port ?? 5173

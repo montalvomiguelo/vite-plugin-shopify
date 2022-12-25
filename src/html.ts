@@ -11,7 +11,7 @@ export default function VitePluginShopifyHtml (options: Options): Plugin {
   let config: ResolvedConfig
 
   return {
-    name: 'vite-plugin-shopify-html',
+    name: 'vite-plugin-shopify:html',
     enforce: 'post',
     configResolved (resolvedConfig) {
       config = resolvedConfig
