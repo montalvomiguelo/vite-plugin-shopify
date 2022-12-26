@@ -1,4 +1,4 @@
-import { relative } from 'path'
+import { join } from 'path'
 import { Plugin, UserConfig, ConfigEnv } from 'vite'
 import { Options } from './types'
 import createDebugger from 'debug'
@@ -56,7 +56,7 @@ export default function config (options: Required<Options>): Plugin {
         build: {
           assetsDir: config.build?.assetsDir ?? './',
           manifest: config.build?.manifest ?? true,
-          outDir: config.build?.outDir ?? relative(options.themeRoot, 'assets'),
+          outDir: config.build?.outDir ?? join(options.themeRoot, 'assets'),
           rollupOptions: {
             input: config.build?.rollupOptions?.input ?? options.input
           }
