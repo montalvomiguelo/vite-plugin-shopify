@@ -7,7 +7,7 @@ import createDebugger from 'debug'
 
 const debug = createDebugger('vite-plugin-shopify:html')
 
-export default function VitePluginShopifyHtml (options: Required<Options>): Plugin {
+export default function html (options: Required<Options>): Plugin {
   let config: ResolvedConfig
 
   return {
