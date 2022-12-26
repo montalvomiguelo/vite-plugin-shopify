@@ -5,7 +5,7 @@ import config from './config'
 import html from './html'
 
 export default function VitePluginShopify (userOptions: string | string[] | Options): PluginOption[] {
-  const options = resolveOptions(userOptions as Options)
+  const options = resolveOptions(userOptions)
 
   return [
     config(options),
