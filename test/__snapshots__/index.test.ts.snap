@@ -1,0 +1,13 @@
+// Vitest Snapshot v1
+
+exports[`vite-plugin-shopify > runs as expected 1`] = `
+"{%- if vite-tag == 'test/__fixtures__/resources/css/theme.css' -%}
+  <link rel=\\"stylesheet\\" href=\\"{{ 'theme-1a84b608.css' | asset_url }}\\">
+{%- endif -%}
+
+{%- if vite-tag == 'test/__fixtures__/resources/js/theme.js' -%}
+  <script src=\\"{{ 'theme-5455b76e.js' | asset_url }}\\" type=\\"module\\" crossorigin=\\"anonymous\\"></script>
+{%- endif -%}"
+`;
+
+exports[`vite-plugin-shopify > runs as expected 2`] = `""`;
