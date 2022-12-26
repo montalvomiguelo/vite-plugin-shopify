@@ -1,6 +1,6 @@
 import type { Options } from './types'
 
-export function resolveOptions (config: Options): Options {
+export function resolveOptions (config: string | string[] | Options): Required<Options> {
   if (typeof config === 'undefined') {
     throw new Error('vite-plugin-shopify: missing configuration.')
   }

@@ -5,7 +5,7 @@ import createDebugger from 'debug'
 
 const debug = createDebugger('vite-plugin-shopify:config')
 
-export default function VitePluginShopifyConfig (options: Options): Plugin {
+export default function VitePluginShopifyConfig (options: Required<Options>): Plugin {
   return {
     name: 'vite-plugin-shopify:config',
     config: function (config: UserConfig, _env: ConfigEnv): UserConfig {
@@ -56,7 +56,7 @@ export default function VitePluginShopifyConfig (options: Options): Plugin {
         build: {
           assetsDir: config.build?.assetsDir ?? './',
           manifest: config.build?.manifest ?? true,
-          outDir: config.build?.outDir ?? relative(options.themeRoot as string, 'assets'),
+          outDir: config.build?.outDir ?? relative(options.themeRoot, 'assets'),
           rollupOptions: {
             input: config.build?.rollupOptions?.input ?? options.input
           }

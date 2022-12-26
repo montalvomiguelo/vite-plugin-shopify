@@ -7,7 +7,7 @@ import createDebugger from 'debug'
 
 const debug = createDebugger('vite-plugin-shopify:html')
 
-export default function VitePluginShopifyHtml (options: Options): Plugin {
+export default function VitePluginShopifyHtml (options: Required<Options>): Plugin {
   let config: ResolvedConfig
 
   return {
@@ -22,7 +22,7 @@ export default function VitePluginShopifyHtml (options: Options): Plugin {
       writeSnippetFile(
         'vite-tag.liquid',
         viteTagsDevelopment(serverUrl),
-        options.themeRoot as string
+        options.themeRoot
       )
 
       writeSnippetFile(
@@ -30,18 +30,18 @@ export default function VitePluginShopifyHtml (options: Options): Plugin {
         themeCheckDisable(['RemoteAsset'])
           .concat('\n')
           .concat(makeScriptTag({ src: `${serverUrl}/${CLIENT_SCRIPT_PATH}`, type: 'module' })),
-        options.themeRoot as string
+        options.themeRoot
       )
     },
     closeBundle () {
-      const manifestFilePath = join(options.themeRoot as string, 'assets', 'manifest.json')
+      const manifestFilePath = join(options.themeRoot, 'assets', 'manifest.json')
 
       const manifest = JSON.parse(
         fs.readFileSync(manifestFilePath, 'utf-8')
       ) as Manifest
 
-      writeSnippetFile('vite-tag.liquid', viteTagsProduction(manifest, config), options.themeRoot as string)
-      writeSnippetFile('vite-client.liquid', '', options.themeRoot as string)
+      writeSnippetFile('vite-tag.liquid', viteTagsProduction(manifest, config), options.themeRoot)
+      writeSnippetFile('vite-client.liquid', '', options.themeRoot)
     }
   }
 }
