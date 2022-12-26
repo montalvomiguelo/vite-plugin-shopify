@@ -17,7 +17,7 @@ export function resolveOptions (config: string | string[] | Options): Required<O
     config.themeRoot = config.themeRoot.trim().replace(/^\/+/, '')
 
     if (config.themeRoot === '') {
-      throw new Error('themeRoot must be a directory. E.g. \'shopify\'.')
+      throw new Error('vite-plugin-shopify: themeRoot must be a subdirectory. E.g. \'shopify\'.')
     }
   }
 
