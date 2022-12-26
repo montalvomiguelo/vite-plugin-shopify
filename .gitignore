@@ -3,4 +3,6 @@ node_modules
 dist
 example/assets/*
 !example/assets/.gitkeep
-vite-*.liquid
+example/snippets/vite-*.liquid
+test/__fixtures__/assets
+test/__fixtures__/snippets/vite-*.liquid
