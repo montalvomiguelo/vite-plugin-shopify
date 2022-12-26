@@ -2,8 +2,6 @@
 
 Vite plugin for developing Shopify themes.
 
-## Usage
-
 ```js
 // vite.config.js
 import { defineConfig } from 'vite'
@@ -23,17 +21,19 @@ export default defineConfig({
 
 ```ts
 export interface Options {
-  input?: string | string[]
+  input: string | string[]
   themeRoot?: string
 }
 ```
 
-## Loading your scripts and styles
+## Snippet Helpers
 
 ```liquid
 {%- liquid
-  # theme.liquid
+  # Render a script tag that includes the Vite client
   render 'vite-client'
+
+  # Render tags that include the given entry
   render 'vite-tag' with 'resources/css/theme.css'
   render 'vite-tag' with 'resources/js/theme.ts'
 -%}
