@@ -1,4 +1,4 @@
 export interface Options {
-  input?: string | string[]
+  input: string | string[]
   themeRoot?: string
 }
