@@ -118,7 +118,7 @@ function viteTagsProduction (manifest: Manifest, config: ResolvedConfig): string
         const chunk = manifest[importee]
         const { css } = chunk
 
-        assetTags.push(makeLinkTag({ href: assetCdnUrl(chunk.file), rel: 'modulepreload', as: 'script', crossorigin: 'anonymous' }))
+        assetTags.push(makeLinkTag({ href: assetCdnUrl(chunk.file), rel: 'modulepreload', crossorigin: 'anonymous' }))
 
         if (css == null) {
           return
